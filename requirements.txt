@@ -1,0 +1,9 @@
+numpy
+pandas
+torch
+torchvision
+torchmetrics
+accelerate
+transformers
+datasets[vision]
+tqdm
