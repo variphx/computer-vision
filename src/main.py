@@ -1,33 +1,14 @@
 import torch
-from torch import nn
-from schema.model import AslClassifier
-from schema.trainer import Trainer
-from schema.dataset import AslDataset
-from sys import argv
+import lightning as L
+from .model import AslTranslator
+from .data import TRAIN_DATASET
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Training on device={device}")
 
-train_dir = "/kaggle/input/asl-alphabet/asl_alphabet_train/asl_alphabet_train"
-dataset = AslDataset(train_dir, device=device)
-dataloader = dataset.dataloader(batch_size=512, shuffle=True)
+trainer = L.Trainer()
+model = AslTranslator(input_dim=(3, 200, 200), output_dim=29)
 
-asl_model = AslClassifier((3, 128, 128), 29, 3, device=device)
-optimizer = torch.optim.AdamW(asl_model.parameters())
-lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5)
+train_dataset = TRAIN_DATASET.train_test_split(0.2, stratify_by_column="label")
+train_dataloader = torch.utils.data.DataLoader(train_dataset["train"])
+eval_dataloader = torch.utils.data.DataLoader(train_dataset["test"])
 
-loss_fn = nn.CrossEntropyLoss()
-
-trainer = Trainer(
-    model=asl_model,
-    dataloader=dataloader,
-    optimizer=optimizer,
-    lr_scheduler=lr_scheduler,
-    loss_fn=loss_fn,
-    epochs=5,
-    device=device,
-)
-
-trainer.train()
-model_path = "/kaggle/working/model.pth"
-trainer.save_model(model_path)
+trainer.fit(model, train_dataloader, eval_dataloader)

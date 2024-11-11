@@ -1,14 +1,15 @@
-FROM nvidia/cuda:12.6.2-runtime-ubuntu24.04
+FROM python:3.12
 WORKDIR /app
 
 COPY . .
 
+ARG USER_NAME="variphx"
+ARG USER_EMAIL="variphx@gmail.com"
+
 RUN apt-get update
-RUN apt-get install -y python3 python3-venv python3-pip git
+RUN apt-get install -y git gh
 RUN git config --global init.defaultBranch main
+RUN git config --global user.name ${USER_NAME}
+RUN git config --global user.email ${USER_EMAIL}
 
-ENV VIRTUAL_ENV=/app/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache -r requirements.txt
